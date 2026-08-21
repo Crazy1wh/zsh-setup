@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# Installs the shared zsh setup. OpenClaw is intentionally not included.
+# Installs a shared zsh setup with Oh My Zsh and completion plugins.
 
 OMZ_DIR="${ZSH:-$HOME/.oh-my-zsh}"
 CUSTOM_DIR="$OMZ_DIR/custom"
@@ -22,7 +22,13 @@ as_root() {
 }
 
 install_packages() {
-  if command -v apt-get >/dev/null 2>&1; then
+  if [[ "$(uname -s)" == "Darwin" ]]; then
+    if ! command -v brew >/dev/null 2>&1; then
+      printf 'macOS 需要先安装 Homebrew：https://brew.sh/\n' >&2
+      exit 1
+    fi
+    brew install zsh git ca-certificates
+  elif command -v apt-get >/dev/null 2>&1; then
     as_root apt-get update
     as_root env DEBIAN_FRONTEND=noninteractive apt-get install -y zsh git ca-certificates
   elif command -v dnf >/dev/null 2>&1; then
@@ -32,7 +38,7 @@ install_packages() {
   elif command -v apk >/dev/null 2>&1; then
     as_root apk add --no-cache zsh git ca-certificates
   else
-    printf '未找到支持的包管理器（apt-get/dnf/yum/apk）。\n' >&2
+    printf '未找到支持的包管理器（macOS/Homebrew、apt-get、dnf、yum 或 apk）。\n' >&2
     exit 1
   fi
 }
